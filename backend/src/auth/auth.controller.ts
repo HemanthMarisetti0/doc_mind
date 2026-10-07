@@ -51,7 +51,7 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   @Get('google/callback')
   async googleCallback(@Req() req: Request, @Res() res: Response) {
-    const frontend = this.config.get<string>('FRONTEND_URL', 'http://localhost:5173').split(',')[0];
+    const frontend = this.config.get<string>('FRONTEND_URL', 'http://localhost:5173').split(',')[0].trim().replace(/\/+$/, '');
     const profile = req.user as GoogleProfile;
     if (!profile?.email) {
       return res.redirect(`${frontend}/login?error=google`);

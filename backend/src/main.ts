@@ -7,8 +7,16 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
 
+  // Browsers send the Origin without a trailing slash, so normalise entries for an exact match.
+  const origins = config
+    .get<string>('FRONTEND_URL', 'http://localhost:5173')
+    .split(',')
+    .map((o) => o.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
+  Logger.log(`CORS origins: ${origins.join(', ')}`, 'Bootstrap');
+
   app.enableCors({
-    origin: config.get<string>('FRONTEND_URL', 'http://localhost:5173').split(','),
+    origin: origins,
     credentials: true,
   });
   app.useGlobalPipes(
