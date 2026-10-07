@@ -171,25 +171,27 @@ All routes except `auth/register`, `auth/login`, `auth/google*`, `auth/providers
 
 ## Deployment
 
-### Render (recommended)
+The API runs on **Render** and the frontend on **Vercel**.
 
-[`render.yaml`](render.yaml) is a Render Blueprint that creates both services:
+### Backend → Render
 
-- `docmind-api`: NestJS web service. Its build runs the migrations, and `/health` is the health check.
-- `docmind-web`: static site with SPA rewrites.
+[`render.yaml`](render.yaml) is a Render Blueprint for the `docmind-api` web service. Its build runs the migrations, and `/health` is the health check.
 
 1. In Render, go to **New → Blueprint** and select this repo.
-2. Fill in the prompted secrets. `JWT_SECRET` is generated for you. Leave `FRONTEND_URL`, `VITE_API_URL` and `GOOGLE_CALLBACK_URL` as placeholders for now.
-3. After the first deploy, set:
-   - `docmind-api` → `FRONTEND_URL=https://<web-host>` and `GOOGLE_CALLBACK_URL=https://<api-host>/auth/google/callback`
-   - `docmind-web` → `VITE_API_URL=https://<api-host>`, then **Manual Deploy → Clear build cache & deploy** (Vite bakes this value in at build time)
-4. In Google Cloud, add `https://<api-host>/auth/google/callback` as a redirect URI and `https://<web-host>` as a JavaScript origin.
+2. Fill in the prompted secrets. `JWT_SECRET` is generated for you.
+3. Set `FRONTEND_URL=https://<vercel-host>` and `GOOGLE_CALLBACK_URL=https://<api-host>/auth/google/callback`.
 
 On the free plan the API sleeps after about 15 minutes idle, so the first request takes 30–60 s to wake it. A document still processing when the API sleeps or restarts stays in **Processing**. Use **Reprocess** on it.
 
-### Vercel (frontend alternative)
+### Frontend → Vercel
 
-Set the root directory to `frontend`. `vercel.json` already rewrites all routes to `index.html`. Set `VITE_API_URL` to the API URL.
+1. In Vercel, go to **Add New → Project**, import this repo, and set **Root Directory** to `frontend`. The Vite preset and `vercel.json` rewrites are picked up automatically.
+2. Add these environment variables:
+   - `VITE_API_URL=https://<api-host>` (baked in at build time, so redeploy after changing it)
+   - `ENABLE_EXPERIMENTAL_COREPACK=1`, so Vercel uses the pnpm version pinned in `package.json`. The lockfile is written by pnpm 12, which Vercel's default pnpm can't read.
+3. Deploy.
+
+Finally, in Google Cloud add `https://<api-host>/auth/google/callback` as a redirect URI and `https://<vercel-host>` as a JavaScript origin.
 
 ## Troubleshooting
 

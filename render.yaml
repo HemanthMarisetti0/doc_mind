@@ -1,5 +1,5 @@
 # Render Blueprint: https://render.com/docs/blueprint-spec
-# Dashboard → New → Blueprint → pick this repo. Values marked `sync: false`
+# API only (the frontend is on Vercel). Dashboard → New → Blueprint → pick this repo. Values marked `sync: false`
 # are prompted for on first deploy (secrets are never committed).
 
 services:
@@ -56,20 +56,3 @@ services:
       - key: SEARCH_TOP_K
         value: "6"
 
-  # --- React frontend (static) ---
-  - type: web
-    name: docmind-web
-    runtime: static
-    rootDir: frontend
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
-    staticPublishPath: dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    envVars:
-      - key: NODE_VERSION
-        value: "24"
-      # https://<api-host>, baked in at build time
-      - key: VITE_API_URL
-        sync: false
