@@ -1,0 +1,84 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Semantic colour tokens; the raw values flip between light and dark below. */
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-subtle: var(--subtle);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-ink: var(--brand-ink);
+}
+
+:root {
+  --canvas: #f7f7f9;
+  --surface: #ffffff;
+  --subtle: #f1f1f5;
+  --line: #e5e5ec;
+  --ink: #16161d;
+  --ink-soft: #55556a;
+  --ink-faint: #8d8da3;
+  --brand: #4f46e5;
+  --brand-strong: #4338ca;
+  --brand-soft: #eef0ff;
+  --brand-ink: #3730a3;
+  color-scheme: light;
+}
+
+.dark {
+  --canvas: #0c0c10;
+  --surface: #14141a;
+  --subtle: #1c1c24;
+  --line: #2a2a35;
+  --ink: #ececf3;
+  --ink-soft: #a6a6b8;
+  --ink-faint: #6f6f84;
+  --brand: #7c74ff;
+  --brand-strong: #938cff;
+  --brand-soft: #1f1d3d;
+  --brand-ink: #c7c3ff;
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-canvas text-ink font-sans antialiased;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brand) 25%, transparent);
+}
+
+/* Thin, unobtrusive scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+.focus-ring {
+  @apply outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-canvas;
+}
+
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-2px); }
+}
+.typing-dot {
+  animation: blink 1.2s infinite ease-in-out;
+}

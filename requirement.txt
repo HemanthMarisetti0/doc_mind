@@ -1,0 +1,727 @@
+# Build DocMind — AI RAG Document Chat Application
+
+Build a portfolio-quality AI RAG application called **DocMind**.
+
+The goal is to demonstrate practical experience with:
+
+* React
+* NestJS
+* PostgreSQL
+* Supabase
+* pgvector
+* Gemini
+* RAG
+* Vector embeddings
+* Semantic search
+* Authentication
+* File processing
+* AI agents
+* Cloud deployment
+
+Do NOT over-engineer the project.
+
+Do NOT add:
+
+* Unit tests
+* Integration tests
+* E2E tests
+* Complex microservices
+* Kubernetes
+* CI/CD pipelines
+* Complex background worker infrastructure
+* Redis unless actually required
+* Payments
+* Admin panel
+* Enterprise-level features
+
+Focus on building a clean, functional and impressive portfolio project.
+
+---
+
+# Tech Stack
+
+## Frontend
+
+* React
+* TypeScript
+* Vite
+* React Router
+* TanStack Query
+* Tailwind CSS
+* Lucide icons
+
+## Backend
+
+* NestJS
+* TypeScript
+* Prisma
+* PostgreSQL
+* pgvector
+* JWT
+* Google OAuth
+* Gemini API
+
+## Cloud
+
+* Supabase PostgreSQL
+* Supabase Storage
+* Render for backend
+* Vercel for frontend
+
+---
+
+# Main Idea
+
+Users can upload documents and chat with them using AI and everything is user specific.
+
+Supported files:
+
+* PDF
+* DOCX
+* TXT
+
+Example:
+
+```text
+Upload Employee Handbook.pdf
+
+        ↓
+
+Extract text
+
+        ↓
+
+Split into chunks
+
+        ↓
+
+Generate embeddings
+
+        ↓
+
+Store embeddings in pgvector
+
+        ↓
+
+User asks a question
+
+        ↓
+
+Semantic search
+
+        ↓
+
+Retrieve relevant chunks
+
+        ↓
+
+Send context to Gemini
+
+        ↓
+
+AI answer + sources
+```
+
+---
+
+# Authentication
+
+Implement:
+
+* Register
+* Login
+* Logout
+* Google Login
+* JWT authentication
+* Protected routes
+
+Users should only be able to access their own documents.
+
+---
+
+# Database
+
+Use Supabase PostgreSQL with pgvector.
+
+Create these tables/models:
+
+### User
+
+```text
+id
+email
+name
+avatarUrl
+passwordHash
+provider
+createdAt
+updatedAt
+```
+
+### Collection
+
+```text
+id
+name
+description
+userId
+createdAt
+updatedAt
+```
+
+### Document
+
+```text
+id
+name
+originalFileName
+mimeType
+fileSize
+storagePath
+status
+collectionId
+userId
+createdAt
+updatedAt
+```
+
+Status:
+
+```text
+UPLOADED
+PROCESSING
+READY
+FAILED
+```
+
+### DocumentChunk
+
+```text
+id
+documentId
+content
+chunkIndex
+pageNumber
+embedding
+createdAt
+```
+
+### Conversation
+
+```text
+id
+userId
+collectionId
+title
+createdAt
+updatedAt
+```
+
+### Message
+
+```text
+id
+conversationId
+role
+content
+sources
+createdAt
+```
+
+---
+
+# Document Upload
+
+Create a clean upload interface.
+
+Flow:
+
+```text
+Select file
+   ↓
+Upload to Supabase Storage
+   ↓
+Create document record
+   ↓
+Extract text
+   ↓
+Chunk text
+   ↓
+Generate Gemini embeddings
+   ↓
+Save chunks + embeddings
+   ↓
+Mark document READY
+```
+
+Show the processing status in the UI.
+
+---
+
+# Text Extraction
+
+Implement separate services for:
+
+* PDF
+* DOCX
+* TXT
+
+Keep document processing code separate from controllers.
+
+---
+
+# Chunking
+
+Create a simple chunking service.
+
+Default:
+
+```text
+Chunk size: 800 tokens/words approximation
+Overlap: 120
+```
+
+Keep it configurable.
+
+Store:
+
+* chunk content
+* chunk index
+* document ID
+* page number
+
+---
+
+# Embeddings
+
+Create an `EmbeddingService`.
+
+Use Gemini embeddings.
+
+Example:
+
+```typescript
+generateEmbedding(text)
+```
+
+Generate an embedding for each document chunk.
+
+Store the embeddings in PostgreSQL using pgvector.
+
+---
+
+# Semantic Search
+
+When the user asks:
+
+```text
+"What is the company's leave policy?"
+```
+
+Do:
+
+```text
+Question
+   ↓
+Generate embedding
+   ↓
+pgvector similarity search
+   ↓
+Get top 5-8 relevant chunks
+   ↓
+Send chunks to Gemini
+```
+
+Make sure search is restricted to the logged-in user's documents.
+
+---
+
+# RAG
+
+Create a dedicated `RagService`.
+
+Flow:
+
+```text
+Question
+   ↓
+Embedding
+   ↓
+Vector Search
+   ↓
+Relevant Chunks
+   ↓
+Context
+   ↓
+Gemini
+   ↓
+Answer
+```
+
+Use a system prompt similar to:
+
+```text
+You are DocMind, an AI assistant that answers questions
+about the user's documents.
+
+Use the provided document context to answer the question.
+
+Do not invent information.
+
+If the answer cannot be found in the provided documents,
+say that you could not find the answer.
+
+Always provide useful source information when available.
+```
+
+---
+
+# Sources / Citations
+
+The AI response should include the documents used.
+
+Example:
+
+```text
+Answer:
+
+Employees can work remotely up to 3 days per week.
+
+Sources:
+📄 Employee Handbook.pdf
+Page 42
+```
+
+Store the source information with the message.
+
+---
+
+# AI Agent
+
+Add a simple agent layer instead of making this only a basic chatbot.
+
+Create tools:
+
+```text
+search_documents
+get_document
+search_collection
+```
+
+The agent can determine when it needs to search the user's documents.
+
+Keep the agent implementation simple.
+
+Do not build a complicated multi-agent system.
+
+---
+
+# Chat UI
+
+Create a modern ChatGPT-style interface.
+
+Features:
+
+* New conversation
+* Conversation history
+* Chat messages
+* Markdown responses
+* Source citations
+* Loading indicator
+* Error handling
+* Ask question input
+* Delete conversation
+
+Example:
+
+```text
+┌──────────────────────────────────────────┐
+│ DocMind                                  │
+├─────────────┬────────────────────────────┤
+│ Conversations│                            │
+│             │ What is the leave policy?   │
+│ HR Policy   │                            │
+│ Project X   │ AI: According to the        │
+│ Research    │ Employee Handbook...        │
+│             │                            │
+│             │ Sources:                    │
+│             │ 📄 Handbook.pdf · Page 42  │
+├─────────────┴────────────────────────────┤
+│ Ask your documents...                 ➤ │
+└──────────────────────────────────────────┘
+```
+
+---
+
+# Dashboard
+
+Create a simple dashboard showing:
+
+```text
+Documents       12
+Collections      4
+Conversations   20
+```
+
+Also show:
+
+* Recent documents
+* Recent conversations
+* Upload button
+
+---
+
+# Collections
+
+Users can organize documents.
+
+Example:
+
+```text
+Engineering
+  ├── Architecture.pdf
+  ├── API Documentation.pdf
+  └── Database.pdf
+
+HR
+  ├── Employee Handbook.pdf
+  └── Leave Policy.pdf
+```
+
+Users can chat with:
+
+* All documents
+* One collection
+* One document
+
+---
+
+# Pages
+
+Create:
+
+```text
+/login
+/register
+/dashboard
+/documents
+/documents/:id
+/collections
+/collections/:id
+/chat
+/chat/:id
+/settings
+```
+
+---
+
+# Backend Structure
+
+Use a clean NestJS structure:
+
+```text
+src/
+├── auth/
+├── users/
+├── documents/
+├── collections/
+├── embeddings/
+├── vector-search/
+├── rag/
+├── agent/
+├── conversations/
+├── storage/
+└── common/
+```
+
+Keep controllers thin and business logic inside services.
+
+---
+
+# API
+
+Implement:
+
+```text
+POST   /auth/register
+POST   /auth/login
+GET    /auth/me
+
+POST   /documents
+GET    /documents
+GET    /documents/:id
+DELETE /documents/:id
+
+POST   /collections
+GET    /collections
+GET    /collections/:id
+DELETE /collections/:id
+
+POST   /conversations
+GET    /conversations
+GET    /conversations/:id
+DELETE /conversations/:id
+
+POST   /conversations/:id/messages
+
+POST   /rag/query
+
+POST   /search
+```
+
+---
+
+# Security
+
+Implement only the important security:
+
+* JWT authentication
+* Password hashing
+* DTO validation
+* File type validation
+* File size validation
+* User ownership checks
+* Environment variables
+* Protected API routes
+* Never expose Gemini API key
+* Never expose Supabase service-role key to frontend
+
+---
+
+# UI Design
+
+Make the UI look like a modern AI SaaS product.
+
+Use:
+
+* Clean sidebar
+* Modern cards
+* Good spacing
+* Responsive layout
+* Loading states
+* Empty states
+* Toast notifications
+* Dark/light mode if easy
+
+Avoid a generic admin dashboard appearance.
+
+---
+
+# Environment Variables
+
+Create `.env.example`:
+
+```env
+DATABASE_URL=
+DIRECT_URL=
+
+JWT_SECRET=
+
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_CALLBACK_URL=
+
+GEMINI_API_KEY=
+
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_STORAGE_BUCKET=documents
+
+FRONTEND_URL=http://localhost:5173
+```
+
+Never commit `.env`.
+
+---
+
+# Deployment
+
+Prepare the application for:
+
+```text
+Frontend → Vercel
+Backend  → Render
+Database → Supabase
+Storage  → Supabase Storage
+AI       → Gemini
+```
+
+Provide simple deployment instructions.
+
+---
+
+# README
+
+Create a concise README containing:
+
+* Project overview
+* Features
+* Tech stack
+* Architecture
+* RAG flow
+* Local setup
+* Environment variables
+* Supabase setup
+* Gemini setup
+* Running the project
+* Deployment instructions
+
+Include a simple architecture diagram.
+
+---
+
+# Development Approach
+
+Build the project step by step.
+
+Start with:
+
+### Phase 1
+
+React + NestJS setup
+
+### Phase 2
+
+Authentication
+
+### Phase 3
+
+Supabase + PostgreSQL + Prisma
+
+### Phase 4
+
+Document upload
+
+### Phase 5
+
+PDF/DOCX/TXT processing
+
+### Phase 6
+
+Chunking + Gemini embeddings
+
+### Phase 7
+
+pgvector semantic search
+
+### Phase 8
+
+RAG + Gemini
+
+### Phase 9
+
+Chat interface
+
+### Phase 10
+
+Simple AI agent
+
+### Phase 11
+
+Deployment
+
+After each phase, make sure the application runs correctly before moving to the next phase.
+
+Prioritize **working features and clean architecture over unnecessary complexity**.
+
+The final project should look like a real SaaS product that I can confidently showcase in my portfolio and explain in an interview.
