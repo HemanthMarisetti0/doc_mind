@@ -1,0 +1,75 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+# Dashboard → New → Blueprint → pick this repo. Values marked `sync: false`
+# are prompted for on first deploy (secrets are never committed).
+
+services:
+  # --- NestJS API ---
+  - type: web
+    name: docmind-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build && pnpm prisma:migrate
+    startCommand: pnpm start:prod
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_CHAT_MODEL
+        value: gemini-2.5-flash
+      - key: GEMINI_EMBEDDING_MODEL
+        value: gemini-embedding-001
+      - key: EMBEDDING_DIMENSIONS
+        value: "768"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        value: documents
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      # https://<api-host>/auth/google/callback
+      - key: GOOGLE_CALLBACK_URL
+        sync: false
+      # https://<frontend-host> (comma-separate to allow several origins)
+      - key: FRONTEND_URL
+        sync: false
+      - key: MAX_FILE_SIZE_MB
+        value: "15"
+      - key: CHUNK_SIZE
+        value: "800"
+      - key: CHUNK_OVERLAP
+        value: "120"
+      - key: SEARCH_TOP_K
+        value: "6"
+
+  # --- React frontend (static) ---
+  - type: web
+    name: docmind-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      # https://<api-host>, baked in at build time
+      - key: VITE_API_URL
+        sync: false

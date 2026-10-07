@@ -171,11 +171,25 @@ All routes except `auth/register`, `auth/login`, `auth/google*`, `auth/providers
 
 ## Deployment
 
-- **Frontend → Vercel:** set the root directory to `frontend`. `vercel.json` already rewrites all routes to `index.html`. Set `VITE_API_URL` to your API URL.
-- **Backend → Render (or similar):** set the root directory to `backend`.
-  - Build: `pnpm install && pnpm build && pnpm prisma:migrate`
-  - Start: `pnpm start:prod`
-  - Set all backend env vars. Point `FRONTEND_URL` at the Vercel URL and `GOOGLE_CALLBACK_URL` at `https://<api-host>/auth/google/callback`. Add that callback URL to the Google OAuth client.
+### Render (recommended)
+
+[`render.yaml`](render.yaml) is a Render Blueprint that creates both services:
+
+- `docmind-api`: NestJS web service. Its build runs the migrations, and `/health` is the health check.
+- `docmind-web`: static site with SPA rewrites.
+
+1. In Render, go to **New → Blueprint** and select this repo.
+2. Fill in the prompted secrets. `JWT_SECRET` is generated for you. Leave `FRONTEND_URL`, `VITE_API_URL` and `GOOGLE_CALLBACK_URL` as placeholders for now.
+3. After the first deploy, set:
+   - `docmind-api` → `FRONTEND_URL=https://<web-host>` and `GOOGLE_CALLBACK_URL=https://<api-host>/auth/google/callback`
+   - `docmind-web` → `VITE_API_URL=https://<api-host>`, then **Manual Deploy → Clear build cache & deploy** (Vite bakes this value in at build time)
+4. In Google Cloud, add `https://<api-host>/auth/google/callback` as a redirect URI and `https://<web-host>` as a JavaScript origin.
+
+On the free plan the API sleeps after about 15 minutes idle, so the first request takes 30–60 s to wake it. A document still processing when the API sleeps or restarts stays in **Processing**. Use **Reprocess** on it.
+
+### Vercel (frontend alternative)
+
+Set the root directory to `frontend`. `vercel.json` already rewrites all routes to `index.html`. Set `VITE_API_URL` to the API URL.
 
 ## Troubleshooting
 
