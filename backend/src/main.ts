@@ -7,12 +7,13 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
 
-  // Browsers send the Origin without a trailing slash, so normalise entries for an exact match.
+  // Browsers send a bare Origin (scheme + host, no path or trailing slash), so reduce entries to that.
   const origins = config
     .get<string>('FRONTEND_URL', 'http://localhost:5173')
     .split(',')
-    .map((o) => o.trim().replace(/\/+$/, ''))
-    .filter(Boolean);
+    .map((o) => o.trim())
+    .filter(Boolean)
+    .map((o) => new URL(o).origin);
   Logger.log(`CORS origins: ${origins.join(', ')}`, 'Bootstrap');
 
   app.enableCors({
